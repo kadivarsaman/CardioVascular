@@ -1,4 +1,5 @@
-def handler(request, response):
-    response.status_code = 200
-    response.body = "CardioVascular API is live 🚀"
-    return response
+def handler(request):
+    return {
+        "statusCode": 200,
+        "body": "CardioVascular API is live 🚀"
+    }
