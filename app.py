@@ -13,7 +13,6 @@ except Exception as e:
     print(f"❌ ERROR: {e}")
     model = None
 
-# --- PROFESSIONAL 6-PAGE TEMPLATES WITH DISCLAIMER ---
 
 BASE_LAYOUT = """
 <!DOCTYPE html>
@@ -156,7 +155,6 @@ BASE_LAYOUT = """
 </html>
 """
 
-# --- NEW DISCLAIMER PAGE ---
 DISCLAIMER_HTML = """
 <div class="row justify-content-center py-5">
     <div class="col-lg-10">
