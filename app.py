@@ -105,6 +105,10 @@ BASE_LAYOUT = """
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+        .nav-link.active {
+            color: var(--primary) !important;
+            border-bottom: 2px solid var(--primary);
+        }
         footer { 
             background: rgba(0,0,0,0.1);
             backdrop-filter: blur(10px);
@@ -151,6 +155,17 @@ BASE_LAYOUT = """
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
 """
@@ -196,10 +211,12 @@ DISCLAIMER_HTML = """
                         By continuing, you acknowledge this tool is for educational purposes only
                     </h5>
                 </div>
-                <a href="/predict" class="btn btn-primary btn-lg px-5 me-3">
-                    <i class="fas fa-check-circle me-2"></i>I Understand & Continue
-                </a>
-                <a href="/" class="btn btn-outline-primary btn-lg px-5">🏠 Back to Home</a>
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a href="/" class="btn btn-outline-danger btn-lg px-4"><i class="fas fa-times me-2"></i>Decline</a>
+                    <a href="/predict" class="btn btn-primary btn-lg px-5">
+                        <i class="fas fa-check-circle me-2"></i>I Understand & Continue
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -248,30 +265,118 @@ PREDICT_HTML = """
     <div class="col-lg-10">
         <div class="glass-card p-5">
             <div class="text-center mb-5">
-                <h2 class="fw-bold mb-3"><i class="fas fa-stethoscope" style="color: var(--primary);" me-3"></i>Enter Patient Data</h2>
+                <h2 class="fw-bold mb-3"><i class="fas fa-stethoscope me-3" style="color: var(--primary);"></i>Enter Patient Data</h2>
                 <p class="lead text-muted">13 Clinical Biomarkers for Accurate Diagnosis</p>
             </div>
-            <form action="/result" method="POST">
-                <div class="row g-4">
-                    <div class="col-md-4"><label class="form-label fw-bold">Age (Years)</label><input type="number" name="age_years" class="form-control" required></div>
-                    <div class="col-md-4"><label class="form-label fw-bold">Gender</label><select name="gender" class="form-select"><option value="1">Female</option><option value="2">Male</option></select></div>
-                    <div class="col-md-4"><label class="form-label fw-bold">Height (cm)</label><input type="number" name="height" class="form-control" required></div>
-                    <div class="col-md-4"><label class="form-label fw-bold">Weight (kg)</label><input type="number" name="weight" class="form-control" required></div>
-                    <div class="col-md-4"><label class="form-label fw-bold">Systolic BP</label><input type="number" name="ap_hi" class="form-control" required></div>
-                    <div class="col-md-4"><label class="form-label fw-bold">Diastolic BP</label><input type="number" name="ap_lo" class="form-control" required></div>
-                    <div class="col-md-3"><label class="form-label fw-bold">Cholesterol</label><select name="cholesterol" class="form-select"><option value="1">Normal</option><option value="2">High</option><option value="3">Critical</option></select></div>
-                    <div class="col-md-3"><label class="form-label fw-bold">Glucose</label><select name="gluc" class="form-select"><option value="1">Normal</option><option value="2">High</option><option value="3">Critical</option></select></div>
-                    <div class="col-md-2"><label class="form-label fw-bold">Smoke</label><select name="smoke" class="form-select"><option value="0">No</option><option value="1">Yes</option></select></div>
-                    <div class="col-md-2"><label class="form-label fw-bold">Alcohol</label><select name="alco" class="form-select"><option value="0">No</option><option value="1">Yes</option></select></div>
-                    <div class="col-md-2"><label class="form-label fw-bold">Active</label><select name="active" class="form-select"><option value="0">No</option><option value="1">Yes</option></select></div>
+            <form action="/result" method="POST" id="predictForm" class="needs-validation" novalidate>
+                
+                <!-- Group 1: Demographics -->
+                <div class="card mb-4 border-0 p-3" style="background: rgba(59,130,246,0.05); border-radius: 15px;">
+                    <h5 class="fw-bold text-primary mb-3"><i class="fas fa-user-circle me-2"></i>Demographics & Anthropometry</h5>
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Age (Years) <i class="fas fa-info-circle text-muted" title="Patient's age in full years"></i></label>
+                            <input type="number" name="age_years" class="form-control" required min="1" max="120" placeholder="e.g., 45" autofocus>
+                            <div class="invalid-feedback">Please enter valid age (1-120).</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Gender</label>
+                            <select name="gender" class="form-select" required>
+                                <option value="" disabled selected>Select...</option>
+                                <option value="1">Female</option>
+                                <option value="2">Male</option>
+                            </select>
+                            <div class="invalid-feedback">Please select gender.</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Height (cm)</label>
+                            <input type="number" name="height" class="form-control" required min="50" max="300" placeholder="e.g., 170">
+                            <div class="invalid-feedback">Valid height required.</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Weight (kg)</label>
+                            <input type="number" name="weight" class="form-control" required min="10" max="500" step="0.1" placeholder="e.g., 70">
+                            <div class="invalid-feedback">Valid weight required.</div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Group 2: Vitals -->
+                <div class="card mb-4 border-0 p-3" style="background: rgba(220,38,38,0.05); border-radius: 15px;">
+                    <h5 class="fw-bold text-danger mb-3"><i class="fas fa-heartbeat me-2"></i>Vitals & Clinical Measures</h5>
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Systolic BP</label>
+                            <input type="number" name="ap_hi" class="form-control" required min="50" max="250" placeholder="e.g., 120">
+                            <div class="form-text">Upper number</div>
+                            <div class="invalid-feedback">Required (50-250)</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Diastolic BP</label>
+                            <input type="number" name="ap_lo" class="form-control" required min="30" max="200" placeholder="e.g., 80">
+                            <div class="form-text">Lower number</div>
+                            <div class="invalid-feedback">Required (30-200)</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Cholesterol</label>
+                            <select name="cholesterol" class="form-select"><option value="1">Normal</option><option value="2">High</option><option value="3">Critical</option></select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Glucose</label>
+                            <select name="gluc" class="form-select"><option value="1">Normal</option><option value="2">High</option><option value="3">Critical</option></select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Group 3: Lifestyle -->
+                <div class="card mb-4 border-0 p-3" style="background: rgba(16,185,129,0.05); border-radius: 15px;">
+                    <h5 class="fw-bold text-success mb-3"><i class="fas fa-running me-2"></i>Lifestyle Factors</h5>
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Smoker</label>
+                            <select name="smoke" class="form-select"><option value="0">No</option><option value="1">Yes</option></select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Alcohol Intake</label>
+                            <select name="alco" class="form-select"><option value="0">No</option><option value="1">Yes</option></select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Physical Activity</label>
+                            <select name="active" class="form-select"><option value="0">No</option><option value="1" selected>Yes</option></select>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="text-center mt-5">
-                    <button type="submit" class="btn btn-primary btn-lg px-5"><i class="fas fa-magic me-2"></i>Predict Risk</button>
+                    <button type="reset" class="btn btn-outline-secondary btn-lg px-4 me-3"><i class="fas fa-undo me-2"></i>Reset Form</button>
+                    <button type="submit" id="submitBtn" class="btn btn-primary btn-lg px-5 position-relative"><i class="fas fa-magic me-2" id="btnIcon"></i><span id="btnText">Predict Risk</span></button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+<script>
+(function () {
+  'use strict'
+  var forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms).forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+      if (!form.checkValidity()) {
+        event.preventDefault()
+        event.stopPropagation()
+      } else {
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.style.opacity = '0.8';
+        btn.style.cursor = 'not-allowed';
+        document.getElementById('btnIcon').className = 'fas fa-spinner fa-spin me-2';
+        document.getElementById('btnText').innerText = 'Analyzing...';
+      }
+      form.classList.add('was-validated')
+    }, false)
+  })
+})()
+</script>
 """
 
 METRICS_HTML = """
@@ -461,10 +566,53 @@ RESULT_HTML = """
                     </div>
                 </div>
             </div>
+            
+            {% if age %}
+            <div class="text-start mt-5 p-4 rounded-4 shadow-sm" style="background: rgba(255,255,255,0.8);">
+                <h4 class="mb-4 fw-bold text-primary"><i class="fas fa-clipboard-list me-2"></i>Patient Summary</h4>
+                <div class="row text-muted g-3 fs-5">
+                    <div class="col-md-4"><strong>Age:</strong> {{ age }} yrs</div>
+                    <div class="col-md-4"><strong>Gender:</strong> {% if gender == 1.0 %}Female{% else %}Male{% endif %}</div>
+                    <div class="col-md-4"><strong>BP:</strong> {{ ap_hi }}/{{ ap_lo }} mmHg</div>
+                    <div class="col-md-4"><strong>Height:</strong> {{ height }} cm</div>
+                    <div class="col-md-4"><strong>Weight:</strong> {{ weight }} kg</div>
+                    <div class="col-md-4"><strong>Cholesterol:</strong> {% if chol == 1.0 %}Normal{% elif chol == 2.0 %}High{% else %}Critical{% endif %}</div>
+                    <div class="col-md-4"><strong>Glucose:</strong> {% if gluc == 1.0 %}Normal{% elif gluc == 2.0 %}High{% else %}Critical{% endif %}</div>
+                    <div class="col-md-4"><strong>Smoking:</strong> {% if smoke == 1.0 %}Yes{% else %}No{% endif %}</div>
+                    <div class="col-md-4"><strong>Alcohol:</strong> {% if alco == 1.0 %}Yes{% else %}No{% endif %}</div>
+                    <div class="col-md-4"><strong>Active:</strong> {% if active == 1.0 %}Yes{% else %}No{% endif %}</div>
+                </div>
+            </div>
+            {% endif %}
+
             <div class="mt-5">
                 <a href="/predict" class="btn btn-primary btn-lg me-3">🔄 New Patient</a>
                 <a href="/" class="btn btn-outline-primary btn-lg">🏠 Dashboard</a>
             </div>
+        </div>
+    </div>
+</div>
+"""
+
+ERROR_HTML = """
+<div class="row justify-content-center py-5">
+    <div class="col-lg-8">
+        <div class="glass-card p-5 text-center bg-danger bg-opacity-10 border-danger border-3 shadow">
+            <i class="fas fa-tools display-1 text-danger mb-4"></i>
+            <h1 class="display-4 fw-bold text-danger mb-4">We hit a snag!</h1>
+            <div class="alert alert-danger fs-5 text-start shadow-sm flex-column">
+                <p><strong>System Message:</strong> {{ error_message }}</p>
+            </div>
+            <div class="text-start mt-4 mb-5 p-4 rounded bg-white">
+                <h5 class="fw-bold"><i class="fas fa-lightbulb text-warning me-2"></i>How to resolve this:</h5>
+                <ul class="text-muted fs-5 mb-0">
+                    <li>If it's a "Model Error", please check that the model file <code>cardio_logistic_model.pkl</code> exists in the main folder.</li>
+                    <li>If it's an input error, ensure all fields were properly filled with numbers.</li>
+                    <li>If the issue persists, contact the system administrator.</li>
+                </ul>
+            </div>
+            <a href="javascript:history.back()" class="btn btn-primary btn-lg me-3"><i class="fas fa-arrow-left me-2"></i>Go Back to Form</a>
+            <a href="/" class="btn btn-outline-primary btn-lg"><i class="fas fa-home me-2"></i>Dashboard</a>
         </div>
     </div>
 </div>
@@ -502,7 +650,7 @@ def about():
 @app.route('/result', methods=['POST'])
 def result():
     if model is None: 
-        return "Model Error: Please ensure cardio_logistic_model.pkl is in the same folder."
+        return render_page(ERROR_HTML, error_message="Model Error: Please ensure cardio_logistic_model.pkl is in the same folder.")
     
     try:
         age = float(request.form['age_years'])
@@ -529,10 +677,13 @@ def result():
                           prediction=int(pred), 
                           prob=round(prob*100, 1), 
                           bmi=round(bmi, 1), 
-                          pp=int(pp))
+                          pp=int(pp),
+                          age=int(age), gender=gender, height=h, weight=w,
+                          ap_hi=int(hi), ap_lo=int(lo), chol=chol,
+                          gluc=gluc, smoke=s, alco=al, active=ac)
                         
     except Exception as e:
-        return f"Prediction Error: {str(e)}"
+        return render_page(ERROR_HTML, error_message=f"Prediction Error: {str(e)}")
 
 import os
 
